@@ -19,7 +19,7 @@ const NUM_RESULTS_TO_FETCH = 50; // Quantos pontos de dados buscar do ThingSpeak
 // --- CONFIGURAÇÃO DO NOSSO SERVIDOR ---
 // A 'deviceKey' do dispositivo que criámos na nossa API.
 // Vá à sua base de dados (MongoDB Compass) ou à resposta do Postman para encontrar a chave.
-const YOUR_DEVICE_KEY = '1760ed8de53a91e5d3d5b9e3dc381fd1aa390bfc'; 
+const YOUR_DEVICE_KEY = '3cc593041087f7e963209ff36ac8f483481064c0'; 
 const YOUR_API_URL = 'http://localhost:3000/api/v1/data';
 
 
@@ -27,7 +27,7 @@ const YOUR_API_URL = 'http://localhost:3000/api/v1/data';
 async function importData() {
     console.log('A iniciar a importação de dados do ThingSpeak...');
 
-    if (YOUR_DEVICE_KEY === '1760ed8de53a91e5d3d5b9e3dc381fd1aa390bfc') {
+    if (YOUR_DEVICE_KEY === '3cc593041087f7e963209ff36ac8f483481064c0') {
         console.error('\nERRO: Por favor, edite este ficheiro e insira a sua `deviceKey` na variável YOUR_DEVICE_KEY.');
         return;
     }

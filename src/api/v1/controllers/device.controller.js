@@ -1,29 +1,36 @@
 /*
  * =================================================================
  * FICHEIRO A ATUALIZAR: src/api/v1/controllers/device.controller.js
- * DESCRIÇÃO: Funções de criar e atualizar agora incluem os campos de temperatura.
+ * DESCRIÇÃO: Corrigido o formato de criação e atualização de dispositivos.
  * =================================================================
  */
-const Device = require('../../../models/Device');
-const User = require('../../../models/User');
+const Device = require('../../models/Device');
+const User = require('../../models/User');
 const mongoose = require('mongoose');
 
 // @desc    Registar um novo dispositivo
 // @route   POST /api/v1/devices
 // @access  Private (Admin)
 const createDevice = async (req, res) => {
-    // ATUALIZAÇÃO: Receber tempMin e tempMax do corpo do pedido
     const { name, tempMin, tempMax } = req.body;
     if (!name) {
         return res.status(400).json({ message: 'O nome do dispositivo é obrigatório.' });
     }
     try {
-        const device = await Device.create({
+        // CORREÇÃO: Os dados das 'settings' agora são passados como um objeto aninhado,
+        // e os valores de temperatura são convertidos para número para garantir a consistência.
+        const deviceData = {
             name,
             tenant: req.user.tenant,
-            'settings.tempMin': tempMin, // Guardar a temperatura mínima
-            'settings.tempMax': tempMax, // Guardar a temperatura máxima
-        });
+            settings: {
+                tempMin: parseFloat(tempMin),
+                tempMax: parseFloat(tempMax),
+            }
+        };
+
+        const device = await Device.create(deviceData);
+        
+        // Retorna o dispositivo completo, incluindo a deviceKey gerada automaticamente.
         const fullDevice = await Device.findById(device._id).select('+deviceKey');
         res.status(201).json(fullDevice);
     } catch (error) {
@@ -45,11 +52,16 @@ const updateDevice = async (req, res) => {
             return res.status(404).json({ message: 'Dispositivo não encontrado.' });
         }
         
-        // ATUALIZAÇÃO: Receber tempMin e tempMax para atualizar
         const { name, tempMin, tempMax } = req.body;
         device.name = name || device.name;
-        device.settings.tempMin = tempMin ?? device.settings.tempMin; // Usar ?? para aceitar 0
-        device.settings.tempMax = tempMax ?? device.settings.tempMax;
+        
+        // CORREÇÃO: Garante que os valores são tratados como números ao atualizar.
+        if (tempMin !== undefined) {
+            device.settings.tempMin = parseFloat(tempMin);
+        }
+        if (tempMax !== undefined) {
+            device.settings.tempMax = parseFloat(tempMax);
+        }
 
         const updatedDevice = await device.save();
         res.status(200).json(updatedDevice);
@@ -60,11 +72,8 @@ const updateDevice = async (req, res) => {
 };
 
 
-// --- O resto das funções do CRUD continuam iguais ---
+// --- O resto das funções do CRUD (sem alterações) ---
 
-// @desc    Listar todos os dispositivos do tenant
-// @route   GET /api/v1/devices
-// @access  Private
 const getAllDevices = async (req, res) => {
     try {
         let devices;
@@ -80,13 +89,10 @@ const getAllDevices = async (req, res) => {
     }
 };
 
-// @desc    Obter um dispositivo específico por ID
-// @route   GET /api/v1/devices/:id
-// @access  Private
 const getDeviceById = async (req, res) => {
     try {
         if (!mongoose.Types.ObjectId.isValid(req.params.id)) return res.status(400).json({ message: 'ID inválido.' });
-        const device = await Device.findOne({ _id: req.params.id, tenant: req.user.tenant });
+        const device = await Device.findOne({ _id: req.params.id, tenant: req.user.tenant }).select('+deviceKey');
         if (!device) return res.status(404).json({ message: 'Dispositivo não encontrado.' });
         res.status(200).json(device);
     } catch (error) {
@@ -94,9 +100,6 @@ const getDeviceById = async (req, res) => {
     }
 };
 
-// @desc    Apagar um dispositivo
-// @route   DELETE /api/v1/devices/:id
-// @access  Private
 const deleteDevice = async (req, res) => {
     try {
         if (!mongoose.Types.ObjectId.isValid(req.params.id)) return res.status(400).json({ message: 'ID inválido.' });
@@ -109,10 +112,4 @@ const deleteDevice = async (req, res) => {
     }
 };
 
-module.exports = {
-    createDevice,
-    getAllDevices,
-    getDeviceById,
-    updateDevice,
-    deleteDevice,
-};
+module.exports = { createDevice, getAllDevices, getDeviceById, updateDevice, deleteDevice };
