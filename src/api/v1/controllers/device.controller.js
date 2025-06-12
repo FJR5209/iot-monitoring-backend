@@ -4,8 +4,8 @@
  * DESCRIÇÃO: Corrigido o formato de criação e atualização de dispositivos.
  * =================================================================
  */
-const Device = require('../../models/Device');
-const User = require('../../models/User');
+const Device = require('../../../models/Device');
+const User = require('../../../models/User');
 const mongoose = require('mongoose');
 
 // @desc    Registar um novo dispositivo
