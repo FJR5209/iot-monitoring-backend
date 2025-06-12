@@ -27,23 +27,23 @@ const SEND_INTERVAL = 7500;
 // Preencha com os dados dos seus 4 dispositivos.
 const devicesToSimulate = [
     { 
-        name: 'HEMOACRE',
+        name: 'HEMOACRE 2',
         deviceKey: '3cc593041087f7e963209ff36ac8f483481064c0', 
         currentTemp: -20.0, // Temperatura inicial
         tempRange: { min: -25, max: -15 } // Faixa de operação normal
-    }, /*
+    }, 
     { 
-        name: 'HEMOACRE 2',
-        deviceKey: '1760ed8de53a91e5d3d5b9e3dc381fd1aa390bfc', 
+        name: 'Teste Direto via ThunderClient',
+        deviceKey: '4e79d7559936f5dcdb1ded8671bf586e06efbcdd', 
         currentTemp: 4.0,
         tempRange: { min: 2, max: 8 }
     },
     { 
-        name: 'HEMOACRE 3',
-        deviceKey: '22baacb535571ecd7300bade699268f981bed8d7', 
+        name: 'HEMOACRE ',
+        deviceKey: '1b738b40b063d3520457bc21f2ed5035fc7156df', 
         currentTemp: 5.5,
         tempRange: { min: 2, max: 8 }
-    },
+    }, /*
     { 
         name: 'HEMOACRE 4',
         deviceKey: '7362364d73d0d809612974a273a1e4c5d548d474', 

@@ -1,11 +1,11 @@
 /*
  * =================================================================
  * FICHEIRO A ATUALIZAR: src/api/v1/controllers/device.controller.js
- * DESCRIÇÃO: Corrigido o formato de criação e atualização de dispositivos.
+ * DESCRIÇÃO: Corrigido o erro de chave duplicada ao criar um novo dispositivo.
  * =================================================================
  */
-const Device = require('../../../models/Device');
-const User = require('../../../models/User');
+const Device = require('../../../models/Device'); 
+const User = require('../../../models/User');     
 const mongoose = require('mongoose');
 
 // @desc    Registar um novo dispositivo
@@ -16,12 +16,14 @@ const createDevice = async (req, res) => {
     if (!name) {
         return res.status(400).json({ message: 'O nome do dispositivo é obrigatório.' });
     }
+
     try {
-        // CORREÇÃO: Os dados das 'settings' agora são passados como um objeto aninhado,
-        // e os valores de temperatura são convertidos para número para garantir a consistência.
         const deviceData = {
             name,
             tenant: req.user.tenant,
+            // CORREÇÃO: Adicionamos um deviceId único no momento da criação.
+            // Usamos mongoose.Types.ObjectId() para gerar um ID único padrão.
+            deviceId: new mongoose.Types.ObjectId(), 
             settings: {
                 tempMin: parseFloat(tempMin),
                 tempMax: parseFloat(tempMax),
@@ -30,12 +32,13 @@ const createDevice = async (req, res) => {
 
         const device = await Device.create(deviceData);
         
-        // Retorna o dispositivo completo, incluindo a deviceKey gerada automaticamente.
         const fullDevice = await Device.findById(device._id).select('+deviceKey');
         res.status(201).json(fullDevice);
+
     } catch (error) {
-        console.error('Erro ao criar dispositivo:', error);
-        res.status(500).json({ message: 'Erro no servidor ao criar o dispositivo.' });
+        console.error('--- ERRO DETALHADO AO CRIAR DISPOSITIVO ---');
+        console.error(error);
+        res.status(500).json({ message: 'Erro no servidor ao criar o dispositivo. Verifique os logs do backend.' });
     }
 };
 
@@ -55,7 +58,6 @@ const updateDevice = async (req, res) => {
         const { name, tempMin, tempMax } = req.body;
         device.name = name || device.name;
         
-        // CORREÇÃO: Garante que os valores são tratados como números ao atualizar.
         if (tempMin !== undefined) {
             device.settings.tempMin = parseFloat(tempMin);
         }

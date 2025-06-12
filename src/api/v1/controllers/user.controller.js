@@ -1,40 +1,77 @@
 /*
  * =================================================================
  * FICHEIRO A ATUALIZAR: src/api/v1/controllers/user.controller.js
- * DESCRIÇÃO: Funções de gestão de perfil e utilizadores atualizadas.
+ * DESCRIÇÃO: Ficheiro completo com todas as funções de gestão de utilizadores.
  * =================================================================
  */
 const User = require('../../../models/User');
 const Device = require('../../../models/Device');
 const { sendWhatsAppMessage } = require('../../../services/whatsapp.service');
 
-const getMyProfile = async (req, res) => { const user = await User.findById(req.user.id); res.status(200).json(user); };
+// @desc    Admin lista todos os utilizadores do tenant
+// @route   GET /api/v1/users
+// @access  Private (Admin)
+const getAllUsers = async (req, res) => {
+    if (req.user.role !== 'admin') {
+        return res.status(403).json({ message: 'Acesso negado.' });
+    }
+    try {
+        const users = await User.find({ tenant: req.user.tenant }).populate('devices', 'name');
+        res.status(200).json(users);
+    } catch (error) {
+        res.status(500).json({ message: 'Erro no servidor.' });
+    }
+};
 
+// @desc    Utilizador obtém o seu próprio perfil
+// @route   GET /api/v1/users/me
+// @access  Private
+const getMyProfile = async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id);
+        res.status(200).json(user);
+    } catch (error) {
+        res.status(500).json({ message: 'Erro ao obter o perfil.' });
+    }
+};
+
+// @desc    Utilizador atualiza o seu próprio perfil
+// @route   PUT /api/v1/users/me
+// @access  Private
 const updateMyProfile = async (req, res) => {
     try {
         const user = await User.findById(req.user.id);
         const { name, email, phoneNumber, whatsappApiKey } = req.body;
         
-        user.name = name || user.name;
-        user.email = email || user.email;
-        user.phoneNumber = phoneNumber || user.phoneNumber;
-        user.whatsappApiKey = whatsappApiKey || user.whatsappApiKey;
+        user.name = name !== undefined ? name : user.name;
+        user.email = email !== undefined ? email : user.email;
+        user.phoneNumber = phoneNumber !== undefined ? phoneNumber : user.phoneNumber;
+        user.whatsappApiKey = whatsappApiKey !== undefined ? whatsappApiKey : user.whatsappApiKey;
 
-        await user.save({ validateBeforeSave: false }); // Desativa validação para permitir campos parciais
+        await user.save({ validateBeforeSave: false });
         res.status(200).json(user);
-    } catch (error) { res.status(500).json({ message: 'Erro ao atualizar o perfil.' }); }
+    } catch (error) {
+        res.status(500).json({ message: 'Erro ao atualizar o perfil.' });
+    }
 };
 
+// @desc    Admin atualiza um utilizador
+// @route   PUT /api/v1/users/:id
+// @access  Private (Admin)
 const updateUser = async (req, res) => {
-    if (req.user.role !== 'admin') return res.status(403).json({ message: 'Acesso negado.' });
+    if (req.user.role !== 'admin') {
+        return res.status(403).json({ message: 'Acesso negado.' });
+    }
     try {
         const { name, email, role, devices, phoneNumber, whatsappApiKey } = req.body;
         const userToUpdate = await User.findById(req.params.id);
 
-        if (!userToUpdate || userToUpdate.tenant.toString() !== req.user.tenant.toString()) return res.status(404).json({ message: 'Utilizador não encontrado.' });
+        if (!userToUpdate || userToUpdate.tenant.toString() !== req.user.tenant.toString()) {
+            return res.status(404).json({ message: 'Utilizador não encontrado.' });
+        }
         
         const oldDevices = new Set(userToUpdate.devices.map(d => d.toString()));
-        
+
         userToUpdate.name = name || userToUpdate.name;
         userToUpdate.email = email || userToUpdate.email;
         userToUpdate.role = role || userToUpdate.role;
@@ -42,40 +79,33 @@ const updateUser = async (req, res) => {
         userToUpdate.whatsappApiKey = whatsappApiKey || userToUpdate.whatsappApiKey;
 
         if (role === 'viewer') {
-            userToUpdate.devices = devices || [];
+            userToUpdate.devices = devices || []; 
             const newDevices = new Set(devices || []);
+
             for (const newDeviceId of newDevices) {
                 if (!oldDevices.has(newDeviceId)) {
                     const addedDevice = await Device.findById(newDeviceId);
-                    if (addedDevice) {
-                        const message = `Olá, ${userToUpdate.name}! O administrador vinculou o dispositivo "${addedDevice.name}" à sua conta.`;
+                    if (addedDevice && userToUpdate.phoneNumber && userToUpdate.whatsappApiKey) {
+                        const message = `Olá, ${userToUpdate.name}! O dispositivo "${addedDevice.name}" foi vinculado à sua conta.`;
                         sendWhatsAppMessage(userToUpdate.phoneNumber, message, userToUpdate.whatsappApiKey);
                     }
                 }
             }
-        } else { userToUpdate.devices = []; }
-        
+        } else if (role === 'admin') {
+            userToUpdate.devices = []; 
+        }
+
         const updatedUser = await userToUpdate.save();
         res.status(200).json(updatedUser);
-    } catch (error) { res.status(500).json({ message: 'Erro no servidor.' }); }
-};
-// @desc    Listar todos os utilizadores do tenant
-// @access  Private (Admin)
-const getAllUsers = async (req, res) => {
-    if (req.user.role !== 'admin') {
-        return res.status(403).json({ message: 'Acesso negado.' });
-    }
-    try {
-        // ATUALIZAÇÃO: Agora o .populate() inclui os detalhes dos dispositivos vinculados a cada utilizador.
-        // Isto é essencial para o frontend saber quais caixas de seleção marcar.
-        const users = await User.find({ tenant: req.user.tenant }).populate('devices');
-        res.status(200).json(users);
     } catch (error) {
+        console.error("Erro ao atualizar utilizador:", error);
         res.status(500).json({ message: 'Erro no servidor.' });
     }
 };
 
-
+// @desc    Admin apaga um utilizador
+// @route   DELETE /api/v1/users/:id
+// @access  Private (Admin)
 const deleteUser = async (req, res) => {
     if (req.user.role !== 'admin') {
         return res.status(403).json({ message: 'Acesso negado.' });
@@ -98,9 +128,10 @@ const deleteUser = async (req, res) => {
     }
 };
 
-
 module.exports = {
     getAllUsers,
+    getMyProfile,
+    updateMyProfile,
     updateUser,
     deleteUser
 };
