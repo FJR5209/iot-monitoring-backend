@@ -31,7 +31,9 @@
     "jsonwebtoken": "^9.0.0",
     "mongoose": "^7.0.3",
     "nodemailer": "^7.0.3",
-    "tailwindcss": "^4.1.8"
+    "password-validator": "^5.3.0",
+    "tailwindcss": "^4.1.8",
+    "winston": "^3.17.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"
