@@ -4,11 +4,11 @@
  * DESCRIÇÃO: Ficheiro completo com todas as funções de autenticação.
  * =================================================================
  */
-const User = require('../../../models/User');
-const Tenant = require('../../../models/Tenant');
-const crypto = require('crypto');
-const jwt = require('jsonwebtoken');
-const { sendEmail } = require('../../../services/email.service'); // <-- CAMINHO CORRIGIDO
+import User from '../../../models/User.js';
+import Tenant from '../../../models/Tenant.js';
+import crypto from 'crypto';
+import jwt from 'jsonwebtoken';
+import { sendEmail } from '../../../services/email.service.js';
 
 // Função auxiliar para gerar um token JWT
 const generateToken = (id) => {
@@ -18,7 +18,7 @@ const generateToken = (id) => {
 };
 
 // @desc    Registar um novo utilizador
-const register = async (req, res) => {
+export const register = async (req, res) => {
     const { tenantName, name, email, password, role, phoneNumber, whatsappApiKey } = req.body;
     if (!tenantName || !name || !email || !password) {
         return res.status(400).json({ message: 'Nome da empresa, nome do utilizador, e-mail e senha são obrigatórios.' });
@@ -38,7 +38,7 @@ const register = async (req, res) => {
 };
 
 // @desc    Autenticar um utilizador
-const login = async (req, res) => {
+export const login = async (req, res) => {
     const { email, password } = req.body;
     if (!email || !password) return res.status(400).json({ message: 'Por favor, forneça e-mail e senha.' });
     try {
@@ -52,7 +52,7 @@ const login = async (req, res) => {
 };
 
 // @desc    Esqueci a minha senha
-const forgotPassword = async (req, res) => {
+export const forgotPassword = async (req, res) => {
     try {
         const user = await User.findOne({ email: req.body.email });
 
@@ -88,7 +88,7 @@ const forgotPassword = async (req, res) => {
 };
 
 // @desc    Redefinir a senha
-const resetPassword = async (req, res) => {
+export const resetPassword = async (req, res) => {
     const hashedToken = crypto.createHash('sha256').update(req.params.token).digest('hex');
     
     try {
@@ -119,6 +119,4 @@ const resetPassword = async (req, res) => {
         res.status(500).json({ message: 'Erro no servidor ao redefinir a senha.' });
     }
 };
-
-module.exports = { register, login, forgotPassword, resetPassword };
 

@@ -1,8 +1,9 @@
-const express = require('express');
+import express from 'express';
+import { getDeviceData } from '../controllers/dashboard.controller.js';
+import { protect } from '../../../midleware/auth.middleware.js';
+
 const router = express.Router();
-const { getDeviceData } = require('../controllers/dashboard.controller');
-const { protect } = require('../../../midleware/auth.middleware'); // Reative esta linha
 
-router.get('/device/:deviceId', protect, getDeviceData); // Reative o 'protect' aqui
+router.get('/device/:deviceId', protect, getDeviceData);
 
-module.exports = router;
+export default router;

@@ -4,11 +4,11 @@
  * DESCRIÇÃO: Corrigido o caminho para os modelos.
  * =================================================================
  */
-const mongoose = require('mongoose');
-const DataReading = require('../../../models/DataReading');
-const Device = require('../../../models/Device');
+import mongoose from 'mongoose';
+import DataReading from '../../../models/DataReading.js';
+import Device from '../../../models/Device.js';
 
-const getDeviceData = async (req, res) => {
+export const getDeviceData = async (req, res) => {
     try {
         const { deviceId } = req.params;
         const { startDate, endDate } = req.query;
@@ -46,6 +46,112 @@ const getDeviceData = async (req, res) => {
     }
 };
 
-module.exports = {
-    getDeviceData,
-};
+function renderChart(canvas, chartData) {
+    console.log('[renderChart] Iniciando renderização do gráfico');
+    console.log('[renderChart] Dados recebidos:', chartData);
+    
+    // Destruir instância anterior se existir
+    if (chartInstance) {
+        console.log('[renderChart] Destruindo instância anterior do gráfico');
+        chartInstance.destroy();
+    }
+    
+    if (!canvas) {
+        console.error('[renderChart] Canvas não encontrado');
+        return;
+    }
+    
+    if (!chartData || !Array.isArray(chartData) || chartData.length === 0) {
+        console.error('[renderChart] Dados inválidos para o gráfico:', chartData);
+        return;
+    }
+    
+    console.log('[renderChart] Preparando dados do gráfico');
+    const recentData = chartData.slice(-10);
+    console.log('[renderChart] Dados recentes:', recentData);
+    
+    const labels = recentData.map(d => {
+        const date = new Date(d.timestamp);
+        console.log('[renderChart] Processando timestamp:', d.timestamp, '->', date);
+        return date.toLocaleTimeString('pt-BR', { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+        });
+    });
+    
+    console.log('[renderChart] Labels gerados:', labels);
+    console.log('[renderChart] Configurando opções do Chart.js');
+    
+    Chart.defaults.color = '#94a3b8';
+    
+    try {
+        console.log('[renderChart] Criando nova instância do gráfico');
+        chartInstance = new Chart(canvas, {
+            type: 'line',
+            data: {
+                labels,
+                datasets: [{
+                    label: 'Temperatura',
+                    data: recentData.map(d => d.temperature),
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                    fill: true,
+                    tension: 0.3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: {
+                    duration: 1000,
+                    easing: 'easeInOutQuart'
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleColor: '#fff',
+                        bodyColor: '#fff',
+                        borderColor: 'rgba(255, 255, 255, 0.1)',
+                        borderWidth: 1
+                    }
+                },
+                scales: {
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Temperatura (°C)',
+                            color: '#94a3b8'
+                        },
+                        grid: {
+                            color: 'rgba(100, 116, 139, 0.2)'
+                        },
+                        ticks: {
+                            color: '#94a3b8'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            color: 'rgba(100, 116, 139, 0.2)'
+                        },
+                        ticks: {
+                            color: '#94a3b8',
+                            maxRotation: 45,
+                            minRotation: 45
+                        }
+                    }
+                }
+            }
+        });
+        
+        console.log('[renderChart] Gráfico renderizado com sucesso');
+        return chartInstance;
+    } catch (error) {
+        console.error('[renderChart] Erro ao criar gráfico:', error);
+        throw error;
+    }
+}

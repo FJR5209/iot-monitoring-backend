@@ -4,14 +4,14 @@
  * DESCRIÇÃO: Adicionar as novas rotas de utilizador à API.
  * =================================================================
  */
-const express = require('express');
-const router = express.Router();
+import express from 'express';
+import authRoutes from './routes/auth.routes.js';
+import deviceRoutes from './routes/device.routes.js';
+import dataRoutes from './routes/data.routes.js';
+import dashboardRoutes from './routes/dashboard.routes.js';
+import userRoutes from './routes/user.routes.js';
 
-const authRoutes = require('./routes/auth.routes');
-const deviceRoutes = require('./routes/device.routes');
-const dataRoutes = require('./routes/data.routes');
-const dashboardRoutes = require('./routes/dashboard.routes');
-const userRoutes = require('./routes/user.routes'); // <-- IMPORTAR
+const router = express.Router();
 
 router.get('/', (req, res) => {
     res.json({ message: 'Bem-vindo à API de Monitorização v1' });
@@ -22,6 +22,6 @@ router.use('/auth', authRoutes);
 router.use('/devices', deviceRoutes);
 router.use('/data', dataRoutes);
 router.use('/dashboard', dashboardRoutes);
-router.use('/users', userRoutes); // <-- USAR A NOVA ROTA
+router.use('/users', userRoutes);
 
-module.exports = router;
+export default router;

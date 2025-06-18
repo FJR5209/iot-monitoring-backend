@@ -4,10 +4,18 @@
  * DESCRIÇÃO: Corrigido para usar a desestruturação na importação.
  * =================================================================
  */
-const express = require('express');
-const router = express.Router();
-const { ingestData } = require('../controllers/data.controller');
+import express from 'express';
+import { ingestData, getDeviceReadings, getLatestReadings } from '../controllers/data.controller.js';
+import { protect } from '../../../midleware/auth.middleware.js';
 
+const router = express.Router();
+
+// Rota pública para ingestão de dados
 router.post('/', ingestData);
 
-module.exports = router;
+// Rotas protegidas para consulta de dados
+router.use(protect);
+router.get('/device/:deviceId', getDeviceReadings);
+router.get('/latest', getLatestReadings);
+
+export default router;

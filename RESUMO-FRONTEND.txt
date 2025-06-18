@@ -1,0 +1,123 @@
+RESUMO PARA AJUSTE DO FRONTEND
+================================
+
+ENDPOINT ATUALIZADO: /api/v1/devices
+
+MUDANÇAS IMPLEMENTADAS:
+- O endpoint agora retorna automaticamente a última leitura (lastReading) e as últimas 5 leituras (readings) de cada dispositivo
+- Não é mais necessário fazer múltiplas requisições para obter essas informações
+
+ESTRUTURA DA RESPOSTA:
+{
+  "data": [
+    {
+      "_id": "684b0814b519347611d18a04",
+      "name": "HEMOACRE",
+      "settings": { "tempMin": 2, "tempMax": 30 },
+      "status": "active",
+      // ... outras propriedades existentes
+      
+      // NOVO: Última leitura
+      "lastReading": {
+        "temperature": 7.5,
+        "humidity": 60,
+        "timestamp": "2025-01-18T15:05:46.102Z"
+      },
+      
+      // NOVO: Últimas 5 leituras
+      "readings": [
+        {
+          "temperature": 7.5,
+          "humidity": 60,
+          "timestamp": "2025-01-18T15:05:46.102Z"
+        },
+        {
+          "temperature": 7.2,
+          "humidity": 58,
+          "timestamp": "2025-01-18T15:00:46.102Z"
+        }
+        // ... até 5 leituras
+      ]
+    }
+  ],
+  "totalPages": 1,
+  "currentPage": 1,
+  "totalItems": 1
+}
+
+COMO USAR NO FRONTEND:
+
+1. REQUISIÇÃO (mantém a mesma):
+const response = await axios.get('/api/v1/devices', {
+  headers: { 'Authorization': `Bearer ${token}` }
+});
+const devices = response.data.data;
+
+2. EXIBIR ÚLTIMA LEITURA:
+{device.lastReading ? (
+  <div>
+    <p>Temperatura: {device.lastReading.temperature}°C</p>
+    <p>Humidade: {device.lastReading.humidity}%</p>
+    <p>Hora: {new Date(device.lastReading.timestamp).toLocaleString('pt-BR')}</p>
+  </div>
+) : (
+  <p>Nenhuma leitura disponível</p>
+)}
+
+3. CALCULAR MÉDIA DAS ÚLTIMAS 5 LEITURAS:
+const averageTemperature = device.readings && device.readings.length > 0
+  ? (device.readings.reduce((sum, reading) => sum + reading.temperature, 0) / device.readings.length).toFixed(1)
+  : 'N/A';
+
+const averageHumidity = device.readings && device.readings.length > 0
+  ? (device.readings.reduce((sum, reading) => sum + (reading.humidity || 0), 0) / device.readings.length).toFixed(1)
+  : 'N/A';
+
+4. EXIBIR HISTÓRICO DAS ÚLTIMAS 5 LEITURAS:
+{device.readings && device.readings.length > 0 && (
+  <div>
+    <h4>Últimas {device.readings.length} leituras:</h4>
+    {device.readings.map((reading, index) => (
+      <div key={index}>
+        <span>{reading.temperature}°C</span>
+        <span>{reading.humidity}%</span>
+        <span>{new Date(reading.timestamp).toLocaleTimeString('pt-BR')}</span>
+      </div>
+    ))}
+  </div>
+)}
+
+BENEFÍCIOS:
+- Uma única requisição em vez de múltiplas
+- Dados sempre sincronizados
+- Fácil cálculo de médias
+- Melhor performance
+
+NOTAS IMPORTANTES:
+- Se não houver leituras, lastReading será null e readings será array vazio
+- O deviceKey continua sendo retornado apenas para admins
+- Todas as funcionalidades existentes (paginação, pesquisa, permissões) continuam funcionando
+- A estrutura de resposta mantém compatibilidade com o código existente
+
+EXEMPLO DE CARD ATUALIZADO:
+<div className="device-card">
+  <h3>{device.name}</h3>
+  
+  {/* Última leitura */}
+  {device.lastReading ? (
+    <div>
+      <p>🌡️ {device.lastReading.temperature}°C</p>
+      <p>💧 {device.lastReading.humidity}%</p>
+      <p>🕐 {new Date(device.lastReading.timestamp).toLocaleString('pt-BR')}</p>
+    </div>
+  ) : (
+    <p>Nenhuma leitura disponível</p>
+  )}
+  
+  {/* Média das últimas 5 leituras */}
+  {device.readings && device.readings.length > 0 && (
+    <div>
+      <p>Média: {averageTemperature}°C / {averageHumidity}%</p>
+    </div>
+  )}
+</div> 

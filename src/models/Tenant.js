@@ -1,11 +1,10 @@
-
 /*
  * =================================================================
  * FICHEIRO A CRIAR: src/models/Tenant.js
  * DESCRIÇÃO: Modelo para o Tenant (a empresa/cliente).
  * =================================================================
  */
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const tenantSchema = new mongoose.Schema({
   name: {
@@ -22,5 +21,5 @@ const tenantSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 const Tenant = mongoose.model('Tenant', tenantSchema);
-module.exports = Tenant;
+export default Tenant;
 

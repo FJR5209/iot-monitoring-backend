@@ -1,36 +1,39 @@
 /*
  * =================================================================
  * FICHEIRO A ATUALIZAR: src/api/v1/routes/user.routes.js
- * DESCRIÇÃO: Reordenadas as rotas para corrigir o erro 'Cast to ObjectId failed'.
+ * DESCRIÇÃO: Corrigido o erro de sintaxe de importação e os caminhos.
  * =================================================================
  */
-const express = require('express');
-const router = express.Router();
-const { 
+import express from 'express';
+import { 
     getAllUsers, 
     updateUser, 
-    deleteUser,
-    getMyProfile,
-    updateMyProfile
-} = require('../controllers/user.controller');
-const { protect } = require('../../../midleware/auth.middleware');
+    deleteUser, 
+    getMyProfile, 
+    updateMyProfile,
+    getUserById
+} from '../controllers/user.controller.js';
+import { protect } from '../../../midleware/auth.middleware.js';
+import { updateUserValidator, updateMyProfileValidator } from '../validators/user.validator.js';
+
+const router = express.Router();
 
 // Todas as rotas de utilizador são protegidas pelo middleware de autenticação
 router.use(protect);
 
-// ROTA ESPECÍFICA: '/me' para o perfil do utilizador logado
-// DEVE VIR ANTES da rota genérica '/:id' para evitar conflitos.
+// Rota específica para o utilizador logado obter e atualizar o seu próprio perfil
 router.route('/me')
     .get(getMyProfile)
-    .put(updateMyProfile);
+    .put(updateMyProfileValidator, updateMyProfile);
 
-// ROTA DE ADMIN: Listar todos os utilizadores
+// Rota para o admin listar todos os utilizadores
 router.route('/')
     .get(getAllUsers);
 
-// ROTAS DE ADMIN: Gerir um utilizador específico por ID
+// Rotas para o admin gerir um utilizador específico por ID
 router.route('/:id')
-    .put(updateUser)
+    .get(getUserById)
+    .put(updateUserValidator, updateUser)
     .delete(deleteUser);
 
-module.exports = router;
+export default router;

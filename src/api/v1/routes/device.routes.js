@@ -1,31 +1,37 @@
 /*
  * =================================================================
  * FICHEIRO A ATUALIZAR: src/api/v1/routes/device.routes.js
- * DESCRIÇÃO: Adicionadas as rotas de GET, PUT e DELETE.
+ * DESCRIÇÃO: Aplica o validador às rotas de criação e atualização.
  * =================================================================
  */
-const express = require('express');
-const router = express.Router();
-const { 
+import express from 'express';
+import { 
     createDevice, 
     getAllDevices, 
     getDeviceById, 
     updateDevice, 
     deleteDevice 
-} = require('../controllers/device.controller');
-const { protect } = require('../../../midleware/auth.middleware');
+} from '../controllers/device.controller.js';
+import { protect } from '../../../midleware/auth.middleware.js';
+import { deviceValidator } from '../validators/device.validator.js';
+import { getDeviceReadings } from '../controllers/data.controller.js';
 
-// Agrupa todas as rotas sob a proteção de autenticação
+const router = express.Router();
+
+// Protege todas as rotas de dispositivos
 router.use(protect);
 
-// Rotas do CRUD de Dispositivos
+// ATIVAÇÃO: O 'deviceValidator' agora é executado antes de 'createDevice' e 'updateDevice'
 router.route('/')
-    .post(createDevice)
+    .post(deviceValidator, createDevice)
     .get(getAllDevices);
 
 router.route('/:id')
     .get(getDeviceById)
-    .put(updateDevice)
+    .put(deviceValidator, updateDevice)
     .delete(deleteDevice);
 
-module.exports = router;
+// Rota para leituras do dispositivo
+router.get('/:id/readings', getDeviceReadings);
+
+export default router;

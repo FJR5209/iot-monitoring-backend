@@ -1,27 +1,75 @@
 /*
  * =================================================================
- * FICHEIRO A ATUALIZAR: src/app.js (no seu projeto backend)
- * DESCRIÇÃO: Configuração do CORS atualizada para permitir pedidos de qualquer origem.
+ * FICHEIRO A ATUALIZAR: src/app.js
+ * DESCRIÇÃO: Configuração completa de segurança para o backend.
  * =================================================================
  */
-const express = require('express');
-const cors = require('cors');
-const apiRoutes = require('./api/v1');
+import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
+import winston from 'winston';
+import passwordValidator from 'password-validator';
+import { body } from 'express-validator';
+import apiRoutes from './api/v1/index.js';
 
 const app = express();
 
-// --- ATUALIZAÇÃO IMPORTANTE ---
-// Configuramos o CORS para aceitar pedidos de qualquer domínio.
-// Isto é essencial para que o seu frontend (no Netlify) consiga comunicar com o seu backend (no Render).
+// Configuração do logger
+const logger = winston.createLogger({
+  level: 'warn',
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.json()
+  ),
+  transports: [
+    new winston.transports.File({ filename: 'security.log' }),
+    new winston.transports.Console({
+      format: winston.format.simple()
+    })
+  ]
+});
+
+// Configuração do validador de senha
+const schema = new passwordValidator();
+schema
+  .is().min(8)
+  .has().uppercase()
+  .has().lowercase()
+  .has().digits()
+  .has().symbols()
+  .has().not().spaces();
+
+// Configuração do rate limiter
+const limiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minuto
+  max: 200, // limite de 200 requisições por IP
+  message: 'Muitas requisições deste IP, por favor tente novamente mais tarde.'
+});
+
+// Middlewares de segurança
+app.use(helmet()); // Proteção de headers HTTP
 app.use(cors({
-    origin: '*' // Permite todas as origens
+  origin: process.env.FRONTEND_URL || '*', // Restringe para o domínio do frontend em produção
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 // Middlewares essenciais
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '10kb' })); // Limita o tamanho do payload
+app.use(express.urlencoded({ extended: true, limit: '10kb' }));
+app.use(limiter);
 
-// Rota de "health check" para verificar se o servidor está no ar
+// Timeout para requisições
+app.use((req, res, next) => {
+  req.setTimeout(5000); // 5 segundos
+  res.setTimeout(5000);
+  next();
+});
+
+// Logging de requisições
+
+// Rota de "health check"
 app.get('/', (req, res) => {
   res.status(200).json({
     status: 'ok',
@@ -29,18 +77,29 @@ app.get('/', (req, res) => {
   });
 });
 
-// Delega as rotas da API para o módulo de rotas
+// Delega as rotas da API
 app.use('/api/v1', apiRoutes);
 
 // Middleware para tratar rotas não encontradas (404)
 app.use((req, res, next) => {
+  logger.warn(`Rota não encontrada: ${req.method} ${req.path}`);
   res.status(404).json({ message: 'Rota não encontrada' });
 });
 
-// Middleware para tratamento de erros genéricos
+// Middleware para tratamento de erros
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ message: 'Ocorreu um erro interno no servidor' });
+  logger.error({
+    error: err.message,
+    stack: err.stack,
+    path: req.path,
+    method: req.method
+  });
+  
+  res.status(err.status || 500).json({
+    message: process.env.NODE_ENV === 'production' 
+      ? 'Ocorreu um erro interno no servidor' 
+      : err.message
+  });
 });
 
-module.exports = app;
+export default app;

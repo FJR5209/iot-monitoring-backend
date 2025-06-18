@@ -1,29 +1,18 @@
 /*
  * =================================================================
  * FICHEIRO A ATUALIZAR: src/api/v1/routes/auth.routes.js
- * DESCRIÇÃO: Ficheiro completo com todas as rotas de autenticação,
- * incluindo as novas para recuperação de senha.
+ * DESCRIÇÃO: Aplica os validadores às rotas correspondentes.
  * =================================================================
  */
-const express = require('express');
+import express from 'express';
+import { register, login, forgotPassword, resetPassword } from '../controllers/auth.controller.js';
+import { registerValidator, loginValidator, forgotPasswordValidator, resetPasswordValidator } from '../validators/auth.validator.js';
+
 const router = express.Router();
-const { 
-    register, 
-    login, 
-    forgotPassword, 
-    resetPassword 
-} = require('../controllers/auth.controller');
 
-// Rota para registar um novo utilizador
-router.post('/register', register);
+router.post('/register', registerValidator, register);
+router.post('/login', loginValidator, login);
+router.post('/forgot-password', forgotPasswordValidator, forgotPassword);
+router.patch('/reset-password/:token', resetPasswordValidator, resetPassword);
 
-// Rota para fazer login
-router.post('/login', login);
-
-// Rota para solicitar a recuperação de senha
-router.post('/forgot-password', forgotPassword);
-
-// Rota para redefinir a senha com o token recebido por e-mail
-router.patch('/reset-password/:token', resetPassword);
-
-module.exports = router;
+export default router;

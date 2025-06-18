@@ -17,7 +17,7 @@ const axios = require('axios');
 // --- CONFIGURAÇÃO DO SIMULADOR ---
 
 // O endereço do nosso servidor backend.
-const YOUR_API_URL = 'https://iot-monitoring-backend-yzqm.onrender.com/api/v1/data';
+const YOUR_API_URL = 'http://localhost:3000/api/v1/data';
 
 // Intervalo de envio em milissegundos.
 // O script enviará dados para UM dispositivo a cada 7.5 segundos (30s / 4 dispositivos).
@@ -28,10 +28,10 @@ const SEND_INTERVAL = 7500;
 const devicesToSimulate = [
     { 
         name: 'HEMOACRE 2',
-        deviceKey: '3cc593041087f7e963209ff36ac8f483481064c0', 
+        deviceKey: 'e665586bae1ef800cb54e385758462b1fe89c07d', 
         currentTemp: -20.0, // Temperatura inicial
         tempRange: { min: -25, max: -15 } // Faixa de operação normal
-    }, 
+    },/* 
     { 
         name: 'Teste Direto via ThunderClient',
         deviceKey: '4e79d7559936f5dcdb1ded8671bf586e06efbcdd', 
@@ -43,7 +43,7 @@ const devicesToSimulate = [
         deviceKey: '1b738b40b063d3520457bc21f2ed5035fc7156df', 
         currentTemp: 5.5,
         tempRange: { min: 2, max: 8 }
-    }, /*
+    }, 
     { 
         name: 'HEMOACRE 4',
         deviceKey: '7362364d73d0d809612974a273a1e4c5d548d474', 

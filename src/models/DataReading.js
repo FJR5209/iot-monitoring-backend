@@ -4,7 +4,7 @@
  * DESCRIÇÃO: Modelo para uma leitura de dados do sensor.
  * =================================================================
  */
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const dataReadingSchema = new mongoose.Schema({
   device: {
@@ -32,4 +32,4 @@ const dataReadingSchema = new mongoose.Schema({
 });
 
 const DataReading = mongoose.model('DataReading', dataReadingSchema);
-module.exports = DataReading;
+export default DataReading;

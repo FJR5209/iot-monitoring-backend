@@ -4,9 +4,9 @@
  * DESCRIÇÃO: Ficheiro completo com todas as funções de gestão de utilizadores.
  * =================================================================
  */
-const User = require('../../../models/User');
-const Device = require('../../../models/Device');
-const { sendWhatsAppMessage } = require('../../../services/whatsapp.service');
+import User from '../../../models/User.js';
+import Device from '../../../models/Device.js';
+import { sendWhatsAppMessage } from '../../../services/whatsapp.service.js';
 
 // @desc    Admin lista todos os utilizadores do tenant
 // @route   GET /api/v1/users
@@ -18,6 +18,27 @@ const getAllUsers = async (req, res) => {
     try {
         const users = await User.find({ tenant: req.user.tenant }).populate('devices', 'name');
         res.status(200).json(users);
+    } catch (error) {
+        res.status(500).json({ message: 'Erro no servidor.' });
+    }
+};
+
+// @desc    Admin obtém um utilizador específico por ID
+// @route   GET /api/v1/users/:id
+// @access  Private (Admin)
+const getUserById = async (req, res) => {
+    if (req.user.role !== 'admin') {
+        return res.status(403).json({ message: 'Acesso negado.' });
+    }
+    try {
+        const user = await User.findOne({ _id: req.params.id, tenant: req.user.tenant })
+            .populate('devices', 'name');
+        
+        if (!user) {
+            return res.status(404).json({ message: 'Utilizador não encontrado.' });
+        }
+        
+        res.status(200).json(user);
     } catch (error) {
         res.status(500).json({ message: 'Erro no servidor.' });
     }
@@ -128,10 +149,11 @@ const deleteUser = async (req, res) => {
     }
 };
 
-module.exports = {
+export {
     getAllUsers,
     getMyProfile,
     updateMyProfile,
     updateUser,
-    deleteUser
+    deleteUser,
+    getUserById
 };

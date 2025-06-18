@@ -4,9 +4,9 @@
  * DESCRIÇÃO: O serviço agora recebe a chave do utilizador como parâmetro.
  * =================================================================
  */
-const axios = require('axios');
+import axios from 'axios';
 
-async function sendWhatsAppMessage(phone, text, userApiKey) {
+export async function sendWhatsAppMessage(phone, text, userApiKey) {
     if (!userApiKey || !phone) {
         console.warn(`[WHATSAPP] Chave API do utilizador ou telefone em falta para o número ${phone}. A saltar envio.`);
         return;
@@ -20,5 +20,3 @@ async function sendWhatsAppMessage(phone, text, userApiKey) {
         console.error(`[WHATSAPP] Falha ao enviar mensagem para ${phone}:`, error.message);
     }
 }
-
-module.exports = { sendWhatsAppMessage };

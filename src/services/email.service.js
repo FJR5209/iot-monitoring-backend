@@ -5,7 +5,7 @@
  * =================================================================
  */
 // Usaremos a biblioteca oficial do SendGrid.
-const sgMail = require('@sendgrid/mail');
+import sgMail from '@sendgrid/mail';
 
 // A chave de API é carregada de forma segura a partir das variáveis de ambiente.
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
@@ -17,7 +17,7 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY);
  * @param {string} options.subject - O assunto do e-mail.
  * @param {string} options.html - O corpo do e-mail em formato HTML.
  */
-async function sendEmail(options) {
+export async function sendEmail(options) {
     const msg = {
         to: options.to,
         // CORREÇÃO: O campo 'from' agora é um objeto com a propriedade 'email', como exigido.
@@ -43,7 +43,7 @@ async function sendEmail(options) {
 /**
  * Envia um e-mail de alerta de temperatura.
  */
-async function sendAlertEmail(to, deviceName, temperature, limit, type) {
+export async function sendAlertEmail(to, deviceName, temperature, limit, type) {
     const subject = `Alerta de Temperatura: ${deviceName}`;
     const htmlBody = `
         <div style="font-family: sans-serif; padding: 20px; color: #333;">
@@ -69,7 +69,7 @@ async function sendAlertEmail(to, deviceName, temperature, limit, type) {
  * @param {string} to - O e-mail do destinatário.
  * @param {string} resetURL - O URL para onde o utilizador será redirecionado.
  */
-async function sendPasswordResetEmail(to, resetURL) {
+export async function sendPasswordResetEmail(to, resetURL) {
     const subject = 'Recuperação de Senha (Válido por 10 min)';
     const htmlBody = `
         <div style="font-family: sans-serif; padding: 20px; border: 1px solid #ddd; border-radius: 8px; max-width: 600px; margin: auto;">
@@ -89,9 +89,3 @@ async function sendPasswordResetEmail(to, resetURL) {
         html: htmlBody,
     });
 }
-
-module.exports = {
-    sendEmail,
-    sendAlertEmail,
-    sendPasswordResetEmail,
-};
