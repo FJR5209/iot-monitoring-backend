@@ -47,10 +47,24 @@ const limiter = rateLimit({
   message: 'Muitas requisições deste IP, por favor tente novamente mais tarde.'
 });
 
+const allowedOrigins = [
+  'http://127.0.0.1:5500', // para testes locais
+  'http://localhost:3000', // se usar React local
+  'https://fjr5209.github.io' // seu frontend em produção
+];
+
 // Middlewares de segurança
 app.use(helmet()); // Proteção de headers HTTP
 app.use(cors({
-  origin: process.env.FRONTEND_URL || '*', // Restringe para o domínio do frontend em produção
+  origin: function(origin, callback) {
+    // Permite requisições sem origin (ex: ferramentas internas)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    } else {
+      return callback(new Error('Not allowed by CORS'));
+    }
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
