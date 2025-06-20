@@ -12,6 +12,7 @@ import winston from 'winston';
 import passwordValidator from 'password-validator';
 import { body } from 'express-validator';
 import apiRoutes from './api/v1/index.js';
+import './services/report.job.js';
 
 const app = express();
 

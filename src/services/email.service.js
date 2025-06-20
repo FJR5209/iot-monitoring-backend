@@ -4,39 +4,50 @@
  * DESCRIÇÃO: Corrigido o formato do remetente para o SendGrid.
  * =================================================================
  */
-// Usaremos a biblioteca oficial do SendGrid.
-import sgMail from '@sendgrid/mail';
+import dotenv from 'dotenv';
+dotenv.config();
 
-// A chave de API é carregada de forma segura a partir das variáveis de ambiente.
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+import nodemailer from 'nodemailer';
+
+console.log('SMTP_HOST:', process.env.SMTP_HOST);
+console.log('SMTP_PORT:', process.env.SMTP_PORT);
+console.log('SMTP_SECURE:', process.env.SMTP_SECURE);
+
+// Configuração do transporter SMTP (ajuste conforme seu provedor)
+const transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: Number(process.env.SMTP_PORT),
+    secure: process.env.SMTP_SECURE === 'true', // true para 465, false para outras portas
+    auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS
+    }
+});
 
 /**
- * Função genérica para enviar e-mails usando o SendGrid.
+ * Função genérica para enviar e-mails usando Nodemailer.
  * @param {object} options - Opções do e-mail.
  * @param {string} options.to - O e-mail do destinatário.
  * @param {string} options.subject - O assunto do e-mail.
  * @param {string} options.html - O corpo do e-mail em formato HTML.
+ * @param {Array} [options.attachments] - Anexos (opcional)
  */
 export async function sendEmail(options) {
-    const msg = {
-        to: options.to,
-        // CORREÇÃO: O campo 'from' agora é um objeto com a propriedade 'email', como exigido.
+    const mailOptions = {
         from: {
-            email: process.env.SENDGRID_VERIFIED_EMAIL,
-            name: 'Sistema de Monitorização IoT' // Nome opcional, mas recomendado
+            name: 'Sistema de Monitorização IoT',
+            address: process.env.SMTP_FROM
         },
+        to: options.to,
         subject: options.subject,
         html: options.html,
+        attachments: options.attachments || []
     };
-
     try {
-        await sgMail.send(msg);
-        console.log(`[E-MAIL] Mensagem enviada para: ${options.to} via SendGrid.`);
+        await transporter.sendMail(mailOptions);
+        console.log(`[E-MAIL] Mensagem enviada para: ${options.to} via Nodemailer.`);
     } catch (error) {
-        console.error('[E-MAIL] Falha ao enviar via SendGrid:', error);
-        if (error.response) {
-            console.error(error.response.body);
-        }
+        console.error('[E-MAIL] Falha ao enviar via Nodemailer:', error);
     }
 }
 

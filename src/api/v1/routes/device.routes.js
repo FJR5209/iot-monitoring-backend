@@ -10,7 +10,9 @@ import {
     getAllDevices, 
     getDeviceById, 
     updateDevice, 
-    deleteDevice 
+    deleteDevice,
+    deviceHeartbeat,
+    getDeviceStatus
 } from '../controllers/device.controller.js';
 import { protect } from '../../../midleware/auth.middleware.js';
 import { deviceValidator } from '../validators/device.validator.js';
@@ -33,5 +35,11 @@ router.route('/:id')
 
 // Rota para leituras do dispositivo
 router.get('/:id/readings', getDeviceReadings);
+
+// Rota para o heartbeat do dispositivo (não precisa de 'protect' pois usa deviceKey)
+router.post('/:id/heartbeat', deviceHeartbeat);
+
+// Rota para obter o status de um dispositivo
+router.get('/:id/status', getDeviceStatus);
 
 export default router;

@@ -7,6 +7,9 @@
 import mongoose from 'mongoose';
 import DataReading from '../../../models/DataReading.js';
 import Device from '../../../models/Device.js';
+import { generateTemperatureReport } from '../../../services/report.service.js';
+import { sendEmail } from '../../../services/email.service.js';
+import User from '../../../models/User.js';
 
 export const getDeviceData = async (req, res) => {
     try {
@@ -155,3 +158,79 @@ function renderChart(canvas, chartData) {
         throw error;
     }
 }
+
+export const sendTestReport = async (req, res) => {
+  try {
+    const tenantId = req.user.tenant;
+    const users = await User.find({ tenant: tenantId });
+    if (users.length === 0) return res.status(404).json({ message: 'Nenhum usuário encontrado.' });
+
+    // Recebe datas do body ou usa o dia atual
+    const { startDate, endDate } = req.body;
+    const now = new Date();
+    const start = startDate ? new Date(startDate) : new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+    const end = endDate ? new Date(endDate) : new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+
+    for (const user of users) {
+      let deviceIds;
+      if (user.role === 'admin') {
+        deviceIds = null; // Admin vê todos
+      } else {
+        deviceIds = user.devices;
+        if (!deviceIds || deviceIds.length === 0) continue;
+      }
+      const pdfBuffer = await generateTemperatureReport(tenantId, start, end, deviceIds);
+      await sendEmail({
+        to: user.email,
+        subject: 'Relatório de Teste',
+        html: '<p>Segue em anexo o relatório de teste, personalizado para seus dispositivos.</p>',
+        attachments: [
+          {
+            content: pdfBuffer.toString('base64'),
+            filename: `relatorio-teste.pdf`,
+            type: 'application/pdf',
+            disposition: 'attachment',
+            encoding: 'base64'
+          }
+        ]
+      });
+    }
+    res.status(200).json({ message: 'Relatórios de teste enviados para todos os usuários!' });
+  } catch (err) {
+    res.status(500).json({ message: 'Erro ao enviar relatório de teste.', error: err.message });
+  }
+};
+
+export const exportReport = async (req, res) => {
+  try {
+    const tenantId = req.user.tenant;
+    const { startDate, endDate, deviceIds: deviceIdsFilter } = req.body;
+
+    const now = new Date();
+    const start = startDate ? new Date(startDate) : new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+    const end = endDate ? new Date(endDate) : new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+
+    let deviceIds;
+    if (req.user.role === 'admin') {
+      deviceIds = deviceIdsFilter || null;
+    } else {
+      if (deviceIdsFilter) {
+        deviceIds = req.user.devices.filter(id => deviceIdsFilter.includes(id.toString()));
+      } else {
+        deviceIds = req.user.devices;
+      }
+      if (!deviceIds || deviceIds.length === 0) {
+        return res.status(403).json({ message: 'Você não tem dispositivos atribuídos para gerar um relatório.' });
+      }
+    }
+
+    const pdfBuffer = await generateTemperatureReport(tenantId, start, end, deviceIds);
+
+    const filename = `relatorio_${now.toISOString().slice(0, 10)}.pdf`;
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
+    res.send(pdfBuffer);
+  } catch (err) {
+    res.status(500).json({ message: 'Erro ao gerar relatório.', error: err.message });
+  }
+};

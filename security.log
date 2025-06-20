@@ -71,3 +71,4 @@
 {"level":"warn","message":"Rota não encontrada: GET /api/v1/devices/684b0814b519347611d18a04/readings","timestamp":"2025-06-17T17:24:43.712Z"}
 {"level":"warn","message":"Rota não encontrada: GET /api/v1/devices/684b0814b519347611d18a04/readings","timestamp":"2025-06-17T17:24:45.758Z"}
 {"level":"warn","message":"Rota não encontrada: GET /favicon.ico","timestamp":"2025-06-18T13:41:01.272Z"}
+{"level":"warn","message":"Rota não encontrada: GET /api/v1/dashboard/send-test-report","timestamp":"2025-06-19T20:35:26.303Z"}

@@ -265,5 +265,70 @@ export const deleteDevice = async (req, res) => {
         if (!device) return res.status(404).json({ message: 'Dispositivo não encontrado.' });
         await device.deleteOne();
         res.status(200).json({ message: 'Dispositivo removido com sucesso.' });
-    } catch (error) { res.status(500).json({ message: 'Erro no servidor.' }); }
+    } catch (error) {
+        res.status(500).json({ message: "Erro ao remover dispositivo.", error: error.message });
+    }
+};
+
+// @desc    Registrar heartbeat de um dispositivo
+// @route   POST /api/v1/devices/:id/heartbeat
+// @access  Public (autenticado por deviceKey)
+export const deviceHeartbeat = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const deviceKey = req.headers['x-device-key'];
+
+        if (!deviceKey) {
+            return res.status(401).json({ message: 'Chave do dispositivo (x-device-key) não fornecida.' });
+        }
+
+        const device = await Device.findById(id).select('+deviceKey');
+        if (!device) {
+            return res.status(404).json({ message: 'Dispositivo não encontrado.' });
+        }
+
+        if (device.deviceKey !== deviceKey) {
+            return res.status(403).json({ message: 'Chave do dispositivo inválida.' });
+        }
+
+        device.lastSeen = new Date();
+        device.isOnline = true;
+        await device.save();
+
+        console.log(`[Heartbeat] Recebido para o dispositivo: ${device.name}`);
+        res.status(200).json({ message: 'Heartbeat recebido com sucesso.' });
+    } catch (error) {
+        console.error('Erro no heartbeat:', error);
+        res.status(500).json({ message: 'Erro interno no servidor.' });
+    }
+};
+
+// @desc    Obter status de um dispositivo
+// @route   GET /api/v1/devices/:id/status
+// @access  Private
+export const getDeviceStatus = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ message: 'ID do dispositivo inválido.' });
+        }
+
+        // Garante que o usuário só possa ver dispositivos do seu tenant.
+        const device = await Device.findOne({ _id: id, tenant: req.user.tenant });
+
+        if (!device) {
+            return res.status(404).json({ message: 'Dispositivo não encontrado ou não pertence à sua organização.' });
+        }
+
+        res.status(200).json({
+            isOnline: device.isOnline,
+            lastSeen: device.lastSeen,
+            uptime: null // Placeholder para futura implementação
+        });
+
+    } catch (error) {
+        console.error('Erro ao obter status do dispositivo:', error);
+        res.status(500).json({ message: 'Erro interno no servidor.' });
+    }
 };

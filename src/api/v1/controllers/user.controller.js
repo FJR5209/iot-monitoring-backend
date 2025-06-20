@@ -99,21 +99,25 @@ const updateUser = async (req, res) => {
         userToUpdate.phoneNumber = phoneNumber || userToUpdate.phoneNumber;
         userToUpdate.whatsappApiKey = whatsappApiKey || userToUpdate.whatsappApiKey;
 
-        if (role === 'viewer') {
-            userToUpdate.devices = devices || []; 
-            const newDevices = new Set(devices || []);
+        if (devices !== undefined) {
+            if (userToUpdate.role === 'viewer') {
+                userToUpdate.devices = devices;
 
-            for (const newDeviceId of newDevices) {
-                if (!oldDevices.has(newDeviceId)) {
-                    const addedDevice = await Device.findById(newDeviceId);
-                    if (addedDevice && userToUpdate.phoneNumber && userToUpdate.whatsappApiKey) {
-                        const message = `Olá, ${userToUpdate.name}! O dispositivo "${addedDevice.name}" foi vinculado à sua conta.`;
-                        sendWhatsAppMessage(userToUpdate.phoneNumber, message, userToUpdate.whatsappApiKey);
+                const newDevicesSet = new Set(devices || []);
+                for (const newDeviceId of newDevicesSet) {
+                    if (!oldDevices.has(newDeviceId)) {
+                        const addedDevice = await Device.findById(newDeviceId);
+                        if (addedDevice && userToUpdate.phoneNumber && userToUpdate.whatsappApiKey) {
+                            const message = `Olá, ${userToUpdate.name}! O dispositivo "${addedDevice.name}" foi vinculado à sua conta.`;
+                            sendWhatsAppMessage(userToUpdate.phoneNumber, message, userToUpdate.whatsappApiKey);
+                        }
                     }
                 }
             }
-        } else if (role === 'admin') {
-            userToUpdate.devices = []; 
+        }
+        
+        if (role === 'admin') {
+            userToUpdate.devices = [];
         }
 
         const updatedUser = await userToUpdate.save();

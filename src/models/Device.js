@@ -39,6 +39,17 @@ const deviceSchema = new mongoose.Schema({
   },
   lastAlertSent: {
     type: Date
+  },
+  lastSeen: {
+    type: Date
+  },
+  isOnline: {
+    type: Boolean,
+    default: false
+  },
+  heartbeatInterval: {
+    type: Number,
+    default: 300 // 5 minutos em segundos
   }
 }, { timestamps: true });
 

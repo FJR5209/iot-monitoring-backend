@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import 'dotenv/config';
 
 const connectDB = async () => {
   try {
@@ -12,5 +13,9 @@ const connectDB = async () => {
     process.exit(1);
   }
 };
+
+console.log('SMTP_HOST:', process.env.SMTP_HOST);
+console.log('SMTP_PORT:', process.env.SMTP_PORT);
+console.log('SMTP_SECURE:', process.env.SMTP_SECURE);
 
 export default connectDB;
