@@ -18,7 +18,7 @@ WORKDIR /usr/src/app
 COPY package*.json ./
 
 # Instala as dependências do projeto (agora no ambiente Linux com as libs corretas)
-RUN npm install --production
+RUN npm install --omit=dev
 
 # Copia o resto do código da aplicação
 COPY . .

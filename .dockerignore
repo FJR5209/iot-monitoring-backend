@@ -1,0 +1,12 @@
+# Ignorar dependências, ficheiros de ambiente e logs
+node_modules
+.env
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+
+# Ignorar ficheiros específicos do Docker e do Git
+.git
+.gitignore
+.dockerignore
+Dockerfile 
