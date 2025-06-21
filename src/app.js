@@ -56,11 +56,12 @@ const allowedOrigins = [
 
 // Middlewares de segurança
 app.use(helmet()); // Proteção de headers HTTP
+
+// Configuração de CORS aberta para diagnóstico
 app.use(cors({
-  origin: allowedOrigins, // Alterado para a forma padrão e mais robusta
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  optionsSuccessStatus: 204 // Adicionado para lidar com preflight requests
+  origin: '*', // Permite todas as origens temporariamente
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 // Middlewares essenciais
