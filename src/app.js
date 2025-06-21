@@ -16,15 +16,60 @@ import './services/report.job.js';
 
 const app = express();
 
-// Configuração Final e Agressiva de CORS
-// Deve ser o primeiro middleware a ser carregado.
+// --- INÍCIO DA CORREÇÃO DE CORS PARA PRODUÇÃO ---
+
+// Lista de origens permitidas
+const allowedOrigins = [
+  'http://127.0.0.1:5500',      // Ambiente de desenvolvimento local
+  'http://localhost:3000',      // Outro ambiente local comum
+  'http://localhost:5500',      // Variação do localhost
+  'http://127.0.0.1:3000',      // Variação do 127.0.0.1
+  'https://fjr5209.github.io'   // Frontend em produção no GitHub Pages
+];
+
 const corsOptions = {
-  origin: "*", // Permite qualquer origem
-  methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+  origin: function (origin, callback) {
+    // Permite requisições que não têm 'origin' (ex: Postman, apps mobile)
+    if (!origin) return callback(null, true);
+    
+    // Em desenvolvimento, permite todas as origens locais
+    if (process.env.NODE_ENV !== 'production') {
+      if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+        return callback(null, true);
+      }
+    }
+    
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = 'A política de CORS para este site não permite acesso da Origem especificada.';
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  },
+  methods: "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS",
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+  credentials: true,
   preflightContinue: false,
   optionsSuccessStatus: 204
 };
+
+// Aplicar o middleware com as opções como o primeiro da pilha
 app.use(cors(corsOptions));
+
+// Middleware adicional para garantir headers CORS
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  
+  if (req.method === 'OPTIONS') {
+    res.sendStatus(200);
+  } else {
+    next();
+  }
+});
+
+// --- FIM DA CORREÇÃO DE CORS PARA PRODUÇÃO ---
 
 
 // Configuração do logger
@@ -81,6 +126,16 @@ app.get('/', (req, res) => {
   res.status(200).json({
     status: 'ok',
     message: 'Servidor de Monitorização IoT está no ar!'
+  });
+});
+
+// Rota de teste CORS
+app.get('/api/v1/test-cors', (req, res) => {
+  res.status(200).json({
+    status: 'ok',
+    message: 'CORS está funcionando corretamente!',
+    origin: req.headers.origin,
+    timestamp: new Date().toISOString()
   });
 });
 
