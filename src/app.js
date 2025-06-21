@@ -57,15 +57,7 @@ const allowedOrigins = [
 // Middlewares de segurança
 app.use(helmet()); // Proteção de headers HTTP
 app.use(cors({
-  origin: function(origin, callback) {
-    // Permite requisições sem origin (ex: ferramentas internas)
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    } else {
-      return callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: allowedOrigins, // Alterado para a forma padrão e mais robusta
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   optionsSuccessStatus: 204 // Adicionado para lidar com preflight requests
