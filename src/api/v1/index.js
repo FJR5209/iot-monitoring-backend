@@ -17,6 +17,16 @@ router.get('/', (req, res) => {
     res.json({ message: 'Bem-vindo à API de Monitorização v1' });
 });
 
+// Rota de health check da API
+router.get('/health', (req, res) => {
+    res.status(200).json({
+        status: 'ok',
+        message: 'API de Monitorização IoT v1 está funcionando!',
+        timestamp: new Date().toISOString(),
+        version: '1.0.0'
+    });
+});
+
 // Agrupa as rotas
 router.use('/auth', authRoutes);
 router.use('/devices', deviceRoutes);
