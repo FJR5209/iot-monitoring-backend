@@ -16,6 +16,17 @@ import './services/report.job.js';
 
 const app = express();
 
+// Configuração Final e Agressiva de CORS
+// Deve ser o primeiro middleware a ser carregado.
+const corsOptions = {
+  origin: "*", // Permite qualquer origem
+  methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+  preflightContinue: false,
+  optionsSuccessStatus: 204
+};
+app.use(cors(corsOptions));
+
+
 // Configuração do logger
 const logger = winston.createLogger({
   level: 'warn',
@@ -48,20 +59,8 @@ const limiter = rateLimit({
   message: 'Muitas requisições deste IP, por favor tente novamente mais tarde.'
 });
 
-const allowedOrigins = [
-  'http://127.0.0.1:5500', // para testes locais
-  'http://localhost:3000', // se usar React local
-  'https://fjr5209.github.io' // seu frontend em produção
-];
-
 // Middlewares de segurança
 app.use(helmet()); // Proteção de headers HTTP
-
-// Abordagem robusta para CORS com acesso público
-app.options('*', cors()); // Responde ao pre-flight com sucesso
-
-app.use(cors({ origin: '*' })); // Permite o pedido principal de qualquer origem
-
 
 // Middlewares essenciais
 app.use(express.json({ limit: '10kb' })); // Limita o tamanho do payload
