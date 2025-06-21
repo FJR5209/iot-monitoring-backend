@@ -57,12 +57,11 @@ const allowedOrigins = [
 // Middlewares de segurança
 app.use(helmet()); // Proteção de headers HTTP
 
-// Configuração de CORS aberta para diagnóstico
-app.use(cors({
-  origin: '*', // Permite todas as origens temporariamente
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+// Abordagem robusta para CORS com acesso público
+app.options('*', cors()); // Responde ao pre-flight com sucesso
+
+app.use(cors({ origin: '*' })); // Permite o pedido principal de qualquer origem
+
 
 // Middlewares essenciais
 app.use(express.json({ limit: '10kb' })); // Limita o tamanho do payload
